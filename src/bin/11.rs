@@ -1,3 +1,5 @@
+use std::vec;
+
 fn fuel_value(x: i32, y: i32, serial_number: i32) -> i32 {
     let (x, y, serial_number) = (x as i64, y as i64, serial_number as i64);
     let rack_id = x + 10;
@@ -11,17 +13,6 @@ fn region_fuel_sum(x: i32, y: i32, side: usize, n: usize, serial_number: i32) ->
     for dx in 0..side {
         for dy in 0..side {
             sum += fuel_value(x + dx as i32, y + dy as i32, serial_number);
-        }
-    }
-
-    sum
-}
-
-fn region_fuel_sum_2(fuel_field: &Vec<Vec<i32>>, x: usize, y: usize, side: usize) -> i32 {
-    let mut sum = 0;
-    for dy in 0..side {
-        for dx in 0..side {
-            sum += fuel_field[y + dy - 1][x + dx - 1];
         }
     }
 
@@ -70,10 +61,36 @@ fn biggest_fuel_region(fuel_field: Vec<Vec<i32>>) -> (usize, usize, usize) {
     let mut side = 0;
     let n = fuel_field.len();
 
+    let mut partial_sums = vec![vec![0; n + 1]; n + 1];
+    for i in 0..n {
+        partial_sums[0][i] = 0;
+        partial_sums[i][0] = 0;
+    }
+    partial_sums[1][1] = fuel_field[0][0];
+    for x in 1..n {
+        partial_sums[1][x + 1] = partial_sums[1][x] + fuel_field[0][x];
+    }
+
+    for y in 1..n {
+        partial_sums[y + 1][1] = partial_sums[y][1] + fuel_field[y][0];
+    }
+
+    for y in 1..n {
+        for x in 1..n {
+            partial_sums[y + 1][x + 1] =
+                fuel_field[y][x] + partial_sums[y][x + 1] + partial_sums[y + 1][x]
+                    - partial_sums[y][x];
+        }
+    }
+
     for size in 2..=n {
         for x in 1..=n - size + 1 {
             for y in 1..=n - size + 1 {
-                let sum = region_fuel_sum_2(&fuel_field, x, y, size);
+                let dsize = size - 1;
+                let sum = partial_sums[y + dsize][x + dsize]
+                    - partial_sums[y + dsize][x - 1]
+                    - partial_sums[y - 1][x + dsize]
+                    + partial_sums[y - 1][x - 1];
                 if sum > result {
                     result = sum;
                     top = (x, y);
