@@ -3,7 +3,6 @@ use std::{
     fmt::{Display, Result},
     io::stdin,
     ops,
-    process::id,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
